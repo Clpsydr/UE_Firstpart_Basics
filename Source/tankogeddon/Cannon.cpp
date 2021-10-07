@@ -31,14 +31,15 @@ void ACannon::Fire()
 
 	if (FiringType == ECannonType::FireProjectile)
 	{
-		//GEngine is a singleton.
-		GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Orange, TEXT("firing a projectile " + FString::FromInt(MachinegunRounds)));
 		MachinegunRounds--;
+		//GEngine is a singleton
+		GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Orange, TEXT("firing a projectile " + FString::FromInt(MachinegunRounds) + " rounds left "));
+		
 	}
 	else if (FiringType == ECannonType::FireTrace)
 	{
-		GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Red, TEXT("firing a laser " + FString::FromInt(LaserBattery)));
 		LaserBattery--;
+		GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Red, TEXT("firing a laser " + FString::FromInt(LaserBattery) + " rounds left"));
 	}
 
 	// timer function is bound to current world 
@@ -56,36 +57,35 @@ void ACannon::AltFire()
 
 	if (FiringType == ECannonType::FireProjectile)
 	{
-		GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Orange, TEXT("projectile burst start " + FString::FromInt(MachinegunRounds)));
+		GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Orange, TEXT("projectile burst start " + FString::FromInt(MachinegunRounds) + " rounds left"));
 		MachinegunRounds--;
 	}
 	else if (FiringType == ECannonType::FireTrace)
 	{
-		GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Red, TEXT("laser burst start " + FString::FromInt(LaserBattery)));
+		GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Red, TEXT("laser burst start " + FString::FromInt(LaserBattery) + " rounds left"));
 		LaserBattery--;
 	}
 	
-	BurstTimer.BindUFunction(this, FName("Burst"), BurstSize);
+	BurstTimer.BindUFunction(this, FName("Burst"), BurstSize, FiringType);
 	GetWorld()->GetTimerManager().SetTimer(BurstTimerHandle, BurstTimer, BurstDelay, false);
 }
 
-void ACannon::Burst(int count)
+void ACannon::Burst(int count, ECannonType currentFiringType)
 {
 	if (count == 0)
 	{
-		//bIsReadyToFire = false;
 		GetWorld()->GetTimerManager().SetTimer(ReloadTimerHandle, this, &ACannon::Reload, BurstDelay, false);
 	}
 	else
 	{
-		BurstTimer.BindUFunction(this, FName("Burst"), count - 1);
+		BurstTimer.BindUFunction(this, FName("Burst"), count - 1, currentFiringType);
 		GetWorld()->GetTimerManager().SetTimer(BurstTimerHandle, BurstTimer, BurstDelay, false);
 
-		if (FiringType == ECannonType::FireProjectile)
+		if (currentFiringType == ECannonType::FireProjectile)
 		{
 			GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Orange, TEXT("projectile n " + FString::FromInt(BurstSize- count + 1)));
 		}
-		else if (FiringType == ECannonType::FireTrace)
+		else if (currentFiringType == ECannonType::FireTrace)
 		{
 			GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Red, TEXT("laser beam n " + FString::FromInt(BurstSize - count + 1)));
 		}
@@ -126,21 +126,17 @@ void ACannon::Reload()
 	bIsBursting = false;
 }
 
-/// quite a dumb way to change weapons, maybe I should make sort of a looped container
+/// quite a dumb way to change weapons, maybe I should make sort of a weapon class or the cannon itself should be one
 void ACannon::CycleWeapons()
 {
-	if (!bIsBursting)
+	if (FiringType == ECannonType::FireProjectile)
 	{
-		if (FiringType == ECannonType::FireProjectile)
-		{
-			FiringType = ECannonType::FireTrace;
-			GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Green, TEXT("changed to laser"));
-		}
-		else
-		{
-			FiringType = ECannonType::FireProjectile;
-			GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Green, TEXT("changed to projectiles"));
-		}
+		FiringType = ECannonType::FireTrace;
+		GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Green, TEXT("changed to laser"));
+	}
+	else
+	{
+		FiringType = ECannonType::FireProjectile;
+		GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Green, TEXT("changed to projectiles"));
 	}
 }
-

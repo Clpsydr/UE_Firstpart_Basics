@@ -33,10 +33,10 @@ protected:
 		float FireDamage = 1.f;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Ammunition")
-		int MachinegunRounds = 300;
+		int MachinegunRounds = 5;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Ammunition")
-		int LaserBattery = 1000;
+		int LaserBattery = 10;
 		
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
 		ECannonType FiringType = ECannonType::FireProjectile;
@@ -59,7 +59,7 @@ public:
 	void AltFire();
 
 	UFUNCTION()
-	void Burst(int count);
+	void Burst(int count, ECannonType currentFiringType);
 	void CycleWeapons();
 
 	bool IsOutOfAmmo(ECannonType Type);

@@ -48,12 +48,10 @@ void ATankPawn::BeginPlay()
 void ATankPawn::Tick(float DeltaTime)
 {
 // Tried two ways here, for tank motion there is a manual calculation that I looked up online
-// For turret however theres an issue, with crossing zero degree point, lerping would happen to occur
-// over larger distance due to degree leaping from 0 to 360
+// For turret however theres an issue, lerping would happen to occur
+// over larger distance due to yaw leaping from -180 to 180 when the cursor is directly below the tank axis
 	Super::Tick(DeltaTime);
-	
 	float FPSIndependentMotion = exp2(-TankMotionSmoothness * DeltaTime);
-	//UE_LOG(LogTankgeddon, Verbose, TEXT("FPSMotion: %f"), currentfps);
 
 	CurrentForwardAxisValue = FMath::Lerp(CurrentForwardAxisValue, TargetForwardAxisValue, FPSIndependentMotion);
 
@@ -68,14 +66,23 @@ void ATankPawn::Tick(float DeltaTime)
 		//rotation angle from one vector to another
 	FRotator TargetTurretRotation = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), TurretTargetAngle);
 	FRotator CurrentTurretRotation = TurretMesh->GetComponentRotation();
+
+	UE_LOG(LogTankgeddon, Verbose, TEXT("Cursor: %f , Turret: %f "), TargetTurretRotation.Yaw, CurrentTurretRotation.Yaw);
+
 	TargetTurretRotation.Roll = CurrentTurretRotation.Roll;
 	TargetTurretRotation.Pitch = CurrentTurretRotation.Pitch;
 	
 	FPSIndependentMotion = exp2(-TurretMotionSmoothness * DeltaTime);
-	TargetTurretRotation.Yaw = FMath::FInterpConstantTo(CurrentTurretRotation.Yaw, TargetTurretRotation.Yaw, DeltaTime, TurretMotionSmoothness);
-	TurretMesh->SetWorldRotation(TargetTurretRotation);
-	//TurretMesh->SetWorldRotation(FMath::InterpExpoOut(CurrentTurretRotation, TargetTurretRotation, FPSIndependentMotion));
-	//TurretMesh->SetWorldRotation(FMath::Lerp(CurrentTurretRotation, TargetTurretRotation, FPSIndependentMotion));
+	TurretMesh->SetWorldRotation(FMath::Lerp(CurrentTurretRotation, TargetTurretRotation, FPSIndependentMotion));
+	
+	/*TargetTurretRotation.Yaw = FMath::FInterpConstantTo(CurrentTurretRotation.Yaw, TargetTurretRotation.Yaw, DeltaTime, TurretMotionSmoothness);
+	//TurretMesh->SetWorldRotation(CurrentTurretRotation);	
+	float RotationTurret = CurrentTurretRotation.Yaw + TargetTurretRotation.Yaw * RotationTurret * DeltaTime;
+	TurretMesh->SetWorldRotation(FRotator(0.f, RotationTurret, 0.f));
+	
+	//TargetTurretRotation.Yaw = FMath::FInterpConstantTo(CurrentTurretRotation.Yaw, TargetTurretRotation.Yaw, DeltaTime, TurretMotionSmoothness);
+	//TurretMesh->SetWorldRotation(FMath::InterpExpoOut(CurrentTurretRotation, TargetTurretRotation, FPSIndependentMotion));*/
+	
 }
 
 void ATankPawn::MoveForward(float AxisValue)
