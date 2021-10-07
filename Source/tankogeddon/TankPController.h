@@ -22,9 +22,13 @@ class TANKOGEDDON_API ATankPController : public APlayerController
 	public:
 		ATankPController();
 		virtual void SetupInputComponent() override;
+		virtual void Tick(float DeltaSeconds) override;
 
 	protected:
 		virtual void BeginPlay() override;
 		void MoveForward(float AxisValue);
-		void MoveSideways(float AxisValue);
+		void RotateRight(float Torque);
+		void Fire();
+		void AltFire();
+		void WeapChange();
 };
