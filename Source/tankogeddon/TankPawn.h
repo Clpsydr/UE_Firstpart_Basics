@@ -1,19 +1,20 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 #pragma once
-
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "Components/BoxComponent.h"
+#include "GameStructs.h"
+#include "Damageable.h"
+#include "HPcomponent.h"
 #include "TankPawn.generated.h"
 
 class UStaticMeshComponent;
 
 UCLASS()
-class TANKOGEDDON_API ATankPawn : public APawn
+class TANKOGEDDON_API ATankPawn : public APawn, public IDamageable
 {
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this pawn's properties
 	ATankPawn();
 
 	UFUNCTION(BlueprintCallable, Category = "Movement")
@@ -34,6 +35,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Turret")
 		void WeapChange();
 
+	UFUNCTION(BlueprintCallable, Category = "Turret")
+		void RefillAmmo(ECannonType cannontype, int amount);
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
+		class UHPcomponent* TankHP;
+
 
 protected:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
@@ -47,8 +54,12 @@ protected:
 		class UCameraComponent* Camera;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
-		class UArrowComponent* CannonSpawnPoint;
+		class UArrowComponent* MainCannonSpawnPoint;
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
+		class UArrowComponent* SubCannonSpawnPoint;
 
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
+		class UBoxComponent* HitCollider;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement|Speed")
 		float MoveSpeed = 1500.f;
@@ -61,16 +72,26 @@ protected:
 		float TurretMotionSmoothness = 0.3f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Turret")
-		TSubclassOf<class ACannon> DefaultCannonClass;
+		TSubclassOf<class ACannon> MainCannonClass;	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Turret")
+		TSubclassOf<class ACannon> SubWeaponClass;
+
+	UFUNCTION(BlueprintNativeEvent, Category = "Health")  
+		void OnHealthChanged(float Damage);
+
+	UFUNCTION(BlueprintNativeEvent, Category = "Health")
+		void OnDie();
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 private:
-	void SetupCannon();
-
 	UPROPERTY()
 		class ACannon* Cannon = nullptr;
+	UPROPERTY()
+		class ACannon* SubWeapon = nullptr;
+
+	class ACannon* ActiveWeapon = nullptr;
 
 	float CurrentForwardAxisValue;
 	float CurrentRotationValue;
@@ -82,6 +103,8 @@ private:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	virtual void TakeDamage(const FDamageData& DamageData) override;
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;

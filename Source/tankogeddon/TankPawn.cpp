@@ -4,6 +4,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Engine/StaticMesh.h"
 #include "Components/ArrowComponent.h"
 #include "Math/UnrealMathUtility.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -31,8 +32,18 @@ ATankPawn::ATankPawn()
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm);
 
-	CannonSpawnPoint = CreateDefaultSubobject<UArrowComponent>(TEXT("Spawn point"));
-	CannonSpawnPoint->SetupAttachment(TurretMesh);
+	MainCannonSpawnPoint = CreateDefaultSubobject<UArrowComponent>(TEXT("Main Weapon spawn point"));
+	MainCannonSpawnPoint->SetupAttachment(TurretMesh);
+
+	SubCannonSpawnPoint = CreateDefaultSubobject<UArrowComponent>(TEXT("Sub Weapon spawn point"));
+	SubCannonSpawnPoint->SetupAttachment(TurretMesh);
+
+	HitCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("Hit collider"));
+	HitCollider->SetupAttachment(BodyMesh);
+
+	TankHP = CreateDefaultSubobject<UHPcomponent>(TEXT("Health component"));
+	TankHP->OnHealthChanged.AddDynamic(this, &ATankPawn::OnHealthChanged);
+	TankHP->OnDie.AddDynamic(this, &ATankPawn::OnDie);
 }
 
 // Called when the game starts or when spawned
@@ -40,16 +51,21 @@ void ATankPawn::BeginPlay()
 {
 	Super::BeginPlay();
 
-	SetupCannon();
-	
+	FActorSpawnParameters Params;
+	Params.Instigator = this;
+	Params.Owner = this;
+
+	Cannon = GetWorld()->SpawnActor<ACannon>(MainCannonClass, Params);
+	Cannon->AttachToComponent(MainCannonSpawnPoint, FAttachmentTransformRules::SnapToTargetIncludingScale);
+	SubWeapon = GetWorld()->SpawnActor<ACannon>(SubWeaponClass, Params);
+	SubWeapon->AttachToComponent(SubCannonSpawnPoint, FAttachmentTransformRules::SnapToTargetIncludingScale);
+
+	ActiveWeapon = Cannon;
 }
 
 // Called every frame
 void ATankPawn::Tick(float DeltaTime)
 {
-// Tried two ways here, for tank motion there is a manual calculation that I looked up online
-// For turret however theres an issue, lerping would happen to occur
-// over larger distance due to yaw leaping from -180 to 180 when the cursor is directly below the tank axis
 	Super::Tick(DeltaTime);
 	float FPSIndependentMotion = exp2(-TankMotionSmoothness * DeltaTime);
 
@@ -67,13 +83,10 @@ void ATankPawn::Tick(float DeltaTime)
 	FRotator TargetTurretRotation = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), TurretTargetAngle);
 	FRotator CurrentTurretRotation = TurretMesh->GetComponentRotation();
 
-	UE_LOG(LogTankgeddon, Verbose, TEXT("Cursor: %f , Turret: %f "), TargetTurretRotation.Yaw, CurrentTurretRotation.Yaw);
-
 	TargetTurretRotation.Roll = CurrentTurretRotation.Roll;
 	TargetTurretRotation.Pitch = CurrentTurretRotation.Pitch;
 	
-	FPSIndependentMotion = exp2(-TurretMotionSmoothness * DeltaTime);
-	TurretMesh->SetWorldRotation(FMath::Lerp(CurrentTurretRotation, TargetTurretRotation, FPSIndependentMotion));
+	TurretMesh->SetWorldRotation(FMath::RInterpTo(CurrentTurretRotation, TargetTurretRotation, DeltaTime, TurretMotionSmoothness));
 	
 	/*TargetTurretRotation.Yaw = FMath::FInterpConstantTo(CurrentTurretRotation.Yaw, TargetTurretRotation.Yaw, DeltaTime, TurretMotionSmoothness);
 	//TurretMesh->SetWorldRotation(CurrentTurretRotation);	
@@ -82,7 +95,6 @@ void ATankPawn::Tick(float DeltaTime)
 	
 	//TargetTurretRotation.Yaw = FMath::FInterpConstantTo(CurrentTurretRotation.Yaw, TargetTurretRotation.Yaw, DeltaTime, TurretMotionSmoothness);
 	//TurretMesh->SetWorldRotation(FMath::InterpExpoOut(CurrentTurretRotation, TargetTurretRotation, FPSIndependentMotion));*/
-	
 }
 
 void ATankPawn::MoveForward(float AxisValue)
@@ -104,43 +116,64 @@ void ATankPawn::SetTurretTargetAngle(const FVector& TargetDirection)
 void ATankPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
 }
 
 void ATankPawn::Fire()
 {
-	if (Cannon)
+	if (ActiveWeapon)
 	{
-		Cannon->Fire();
+		ActiveWeapon->Fire();
 	}
 }
 
 void ATankPawn::AltFire()
 {
-	if (Cannon)
+	if (ActiveWeapon)
 	{
-		Cannon->AltFire();
+		ActiveWeapon->AltFire();
 	}
-}
-
-void ATankPawn::SetupCannon()
-{
-	if (Cannon)
-	{
-		Cannon->Destroy();
-	}
-
-	FActorSpawnParameters Params;
-	Params.Instigator = this;
-	Params.Owner = this;
-	Cannon = GetWorld()->SpawnActor<ACannon>(DefaultCannonClass, Params);
-	Cannon->AttachToComponent(CannonSpawnPoint, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 }
 
 void ATankPawn::WeapChange()
 {
-	if (Cannon)
+	if (ActiveWeapon == Cannon)
 	{
-		Cannon->CycleWeapons();
+		GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Green, TEXT("swapping from cannon to sub"));
+		ActiveWeapon = SubWeapon;
 	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Green, TEXT("swapping from sub to cannon"));
+		ActiveWeapon = Cannon;
+	}
+}
+
+void ATankPawn::RefillAmmo(ECannonType cannontype, int amount)
+{
+	if (Cannon->GetType() == cannontype)
+	{
+		GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Green, TEXT("refilling main cannon"));
+		Cannon->Refill(amount);
+	}
+	if (SubWeapon->GetType() == cannontype)
+	{
+		GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Green, TEXT("refilling sub cannon"));
+		SubWeapon->Refill(amount);
+	}
+}
+
+void ATankPawn::TakeDamage(const FDamageData& DamageData)
+{
+	TankHP->TakeDamage(DamageData);
+}
+
+void ATankPawn::OnHealthChanged_Implementation(float Damage)
+{
+	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Blue, TEXT("Tank HP left " + FString::SanitizeFloat(TankHP->GetHPRatio() * 100) + "%"));
+}
+
+void ATankPawn::OnDie_Implementation()
+{
+	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 20.f, FColor::Blue, TEXT("No Pawn in possession"));
+	Destroy();
 }

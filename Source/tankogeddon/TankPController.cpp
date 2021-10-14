@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "TankPController.h"
 #include "TankPawn.h"
 #include "DrawDebugHelpers.h"
@@ -37,6 +35,7 @@ void ATankPController::Tick(float DeltaSeconds)
 	// returns 2 Fvectors  
 			// position projected on the front frustum surface of the camera
 			// would allow correct rotation only in case of top down angle centered on the tank.
+			
 	FVector WorldMousePosition, WorldMouseDirection;
 	DeprojectMousePositionToWorld(WorldMousePosition, WorldMouseDirection);
 

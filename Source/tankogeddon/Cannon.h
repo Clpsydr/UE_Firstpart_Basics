@@ -1,8 +1,8 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "GameStructs.h"
+#include "Projectile.h"
 #include "Cannon.generated.h"
 
 UCLASS()
@@ -17,29 +17,33 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
 		class UArrowComponent* ProjectileSpawnPoint;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Fire params")
-		float FireRate = 3.f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Fire params")
+		float FireRate = 1.f;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Fire params")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (ClampMin = 1), Category = "Fire params") // 
 		int BurstSize = 3;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Fire params")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (EditCondition = "BurstSize > 1", EditConditionHides), Category = "Fire params") 
 		float BurstDelay = 0.1f;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Fire params")
-		float FireRange = 1000.f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Fire params")
+		float FireRange = 3000.f;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Fire params")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Fire params")
 		float FireDamage = 1.f;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Ammunition")
-		int MachinegunRounds = 5;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Ammunition")
+		int Ammo = 50;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Ammunition")
-		int LaserBattery = 10;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Ammunition")
+		int MaxAmmo = 1000;
 		
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Components")
 		ECannonType FiringType = ECannonType::FireProjectile;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (EditCondition = "FiringType == ECannonType::FireProjectile", EditConditionHides), 
+		Category = "Fire params") 
+		TSubclassOf<class AProjectile> ProjectileClass;
 
 
 private:
@@ -59,11 +63,15 @@ public:
 	void AltFire();
 
 	UFUNCTION()
-	void Burst(int count, ECannonType currentFiringType);
+		void Burst(int count, ECannonType currentFiringType);
+	UFUNCTION()
+		void Refill(int amount);
+
 	void CycleWeapons();
 
 	bool IsOutOfAmmo(ECannonType Type);
 	bool IsReadyToFire();
+	ECannonType GetType();
 
 protected:
 	// Called when the game starts or when spawned
