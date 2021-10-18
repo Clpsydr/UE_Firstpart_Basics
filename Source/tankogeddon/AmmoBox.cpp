@@ -12,7 +12,6 @@ AAmmoBox::AAmmoBox()
 	Mesh->SetCollisionProfileName(FName("OverlapAll"));
 	Mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	Mesh->SetGenerateOverlapEvents(true);
-
 }
 
 void AAmmoBox::OnMeshOverlapBegin(class UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,

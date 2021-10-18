@@ -13,8 +13,6 @@ class TANKOGEDDON_API AEnemyTower : public AWeaponUnit
 	public:
 		AEnemyTower();
 
-		virtual void Tick(float DeltaTime) override;
-
 	protected:
 		UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Targeting")
 			float TargetingRange = 1000;
@@ -30,8 +28,13 @@ class TANKOGEDDON_API AEnemyTower : public AWeaponUnit
 		void AimAtPlayer();
 		bool IsPlayerInRange();
 		bool CanFire();
+		void Idle();
 
 	private:
 		UPROPERTY()
 			class APawn* PlayerPawn;
+
+	public:
+		virtual void Tick(float DeltaTime) override;
+
 };

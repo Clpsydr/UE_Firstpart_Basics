@@ -32,6 +32,8 @@ AWeaponUnit::AWeaponUnit()
 // Called when the game starts or when spawned
 void AWeaponUnit::BeginPlay()
 {
+	Super::BeginPlay();
+
 	FActorSpawnParameters Params;
 	Params.Owner = this;
 	AWeaponUnit::Cannon = GetWorld()->SpawnActor<ACannon>(AWeaponUnit::CannonClass, Params);
@@ -58,7 +60,6 @@ void AWeaponUnit::Fire()
 void AWeaponUnit::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 4.f, FColor::White, TEXT("ticking in base"));
 }
 
 void AWeaponUnit::TakeDamage(const FDamageData& DamageData)

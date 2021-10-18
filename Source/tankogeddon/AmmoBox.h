@@ -14,10 +14,7 @@ public:
 
 protected:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
-		class UStaticMeshComponent* Mesh;
-
-	/*UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon type")
-		TSubclassOf<class ACannon> CannonClass;*/
+		class UStaticMeshComponent* Mesh;	
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon type")
 		ECannonType CannonType;

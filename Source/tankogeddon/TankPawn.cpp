@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 #include "TankPawn.h"
 #include "Cannon.h"
+#include "AmmoBox.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
@@ -8,6 +9,10 @@
 #include "Components/ArrowComponent.h"
 #include "Math/UnrealMathUtility.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "BulletPoolSubsystem.h"
+#include "Particles/ParticleSystemComponent.h"
+#include "Components/AudioComponent.h"
+#include "PatrolAIController.h"
 #include "tankogeddon.h"
 
 // Sets default values
@@ -37,6 +42,15 @@ ATankPawn::ATankPawn()
 
 	SubCannonSpawnPoint = CreateDefaultSubobject<UArrowComponent>(TEXT("Sub Weapon spawn point"));
 	SubCannonSpawnPoint->SetupAttachment(TurretMesh);
+
+	DamageEffect = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Damage Effect"));
+	DamageEffect->SetupAttachment(BodyMesh);
+	
+	DestructionEffect = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Death Effect"));
+	DestructionEffect->SetupAttachment(BodyMesh);
+
+	DeathSoundEffect = CreateDefaultSubobject<UAudioComponent>(TEXT("Death Sound"));
+	DeathSoundEffect->SetupAttachment(BodyMesh);
 
 	HitCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("Hit collider"));
 	HitCollider->SetupAttachment(BodyMesh);
@@ -162,8 +176,14 @@ void ATankPawn::RefillAmmo(ECannonType cannontype, int amount)
 	}
 }
 
+FVector ATankPawn::GetTurretForwardVector()
+{
+	return TurretMesh->GetForwardVector();
+}
+
 void ATankPawn::TakeDamage(const FDamageData& DamageData)
 {
+	DamageEffect->ActivateSystem();
 	TankHP->TakeDamage(DamageData);
 }
 
@@ -172,8 +192,33 @@ void ATankPawn::OnHealthChanged_Implementation(float Damage)
 	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Blue, TEXT("Tank HP left " + FString::SanitizeFloat(TankHP->GetHPRatio() * 100) + "%"));
 }
 
+// somehow I cant just evoke Destroy method on timer, so I made this sort of thing instead.
+void ATankPawn::DestroyCrutch()
+{
+	Destroy();
+}
+
+// instead of leaving sound outside of the pawn (which is probably the right way), I make the tank intangible to let it play the effects
 void ATankPawn::OnDie_Implementation()
 {
-	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 20.f, FColor::Blue, TEXT("No Pawn in possession"));
-	Destroy();
+	DestructionEffect->ActivateSystem();
+	DeathSoundEffect->Play(); 
+
+	UBulletPoolSubsystem* BulletPool = GetWorld()->GetSubsystem<UBulletPoolSubsystem>();
+	FTransform SpawnTransform(GetActorRotation(),GetActorLocation(), FVector::OneVector);
+	AAmmoBox* AmmoBox = Cast<AAmmoBox>(BulletPool->RetrieveActor(ItemDrop, SpawnTransform));
+
+	PrimaryActorTick.SetTickFunctionEnable(false);
+	BodyMesh->SetHiddenInGame(true);
+	TurretMesh->SetHiddenInGame(true);
+	BodyMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	HitCollider->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
+	
+	Cast<APatrolAIController>(GetController())->TurnOff();
+	GetController()->UnPossess();
+	SubWeapon->Destroy(); 
+	//Cannon->Destroy();  // Throws exception, probably because something still attempts to call for the cannon, or bullet requests instigator?
+	//TODO: Find a better way to turn the whole actor off with its subobjects 
+	GetWorldTimerManager().SetTimer(LastMomentsTimer, this, &ATankPawn::DestroyCrutch, 3.f, false);
 }

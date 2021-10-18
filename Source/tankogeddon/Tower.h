@@ -38,7 +38,7 @@ protected:
 		TSubclassOf<class ACannon> CannonClass;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Targeting")
-		float TargetingRange = 1000;
+		float TargetingRange = 3000;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Targeting")
 		float TargetingSpeed = 0.1f;
@@ -57,6 +57,7 @@ protected:
 	bool IsPlayerInRange();
 	bool CanFire();
 	void Fire();
+	void Idle();
 
 	UFUNCTION(BlueprintNativeEvent, Category="Health")  //Allows to redefine function in blueprints
 	void OnHealthChanged(float Damage);

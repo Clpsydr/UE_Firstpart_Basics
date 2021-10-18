@@ -17,6 +17,21 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
 		class UArrowComponent* ProjectileSpawnPoint;
 
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Effects")
+		class  UParticleSystemComponent* ShootEffect;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Effects")
+		class  UParticleSystemComponent* LaserEffect;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Effects")
+		class UAudioComponent* FireSoundEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Effects")
+		class UForceFeedbackEffect* ShootJoypadFeedback;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Effects")
+		class TSubclassOf<class UCameraShakeBase> ShootCameraFeedback;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Fire params")
 		float FireRate = 1.f;
 
@@ -44,6 +59,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (EditCondition = "FiringType == ECannonType::FireProjectile", EditConditionHides), 
 		Category = "Fire params") 
 		TSubclassOf<class AProjectile> ProjectileClass;
+
+	
 
 
 private:

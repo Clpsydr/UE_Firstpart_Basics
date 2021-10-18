@@ -48,11 +48,9 @@ void ATankPController::Tick(float DeltaSeconds)
 	TurretTargetDirection.Z = 0.f;
 	TurretTargetDirection.Normalize();
 	FVector TurretTargetPosition = TankPawn->GetActorLocation() + TurretTargetDirection * 1000.f;
-	DrawDebugLine(GetWorld(), TankPawn->GetActorLocation(), TurretTargetPosition, FColor::Magenta, false, 0.1f, 0, 2.f);
 
 	TankPawn->SetTurretTargetAngle(TurretTargetPosition);
 }
- 
 
 void ATankPController::MoveForward(float AxisValue)
 {

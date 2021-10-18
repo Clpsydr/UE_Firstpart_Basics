@@ -1,61 +1,71 @@
 #include "BulletPoolSubsystem.h"
 
-UBulletPoolSubsystem::UBulletPoolSubsystem()
+AActor* UBulletPoolSubsystem::RetrieveActor(UClass* Class, const FTransform& Transform)
 {
-/*	ProjectileSet.Init(GetWorld()->SpawnActor<AProjectile>(FVector(0.f, 0.f, 0.f), FRotator(0.f, 0.f, 0.f)), SetVolume);
-	for (auto& Proj : ProjectileSet)
+	if (!Class)
 	{
-		//AProjectile* newproj;
-		//newproj = GetWorld()->SpawnActor<AProjectile>(FVector(0.f,0.f,0.f), FRotator(0.f,0.f,0.f));
-		//Proj = newproj;
-		if (Proj)
+		return nullptr;
+	}
+
+	TArray<AActor*>* Pool = InactiveActors.Find(Class);
+	AActor* Result = nullptr;
+	if (Pool && Pool->Num() > 0)
+	{
+		Result = Pool->Pop();
+		FVector CorrectedScale = Transform.GetScale3D() * Result->GetActorScale();  //theoretically only managed due to bullet mesh wildly scaling
+		Result->SetActorTransform(FTransform(Transform.GetRotation(), Transform.GetLocation(), CorrectedScale), false, nullptr, 
+			ETeleportType::ResetPhysics);
+		Result->SetActorTickEnabled(true);
+	}
+	else
+	{
+		Result = GetWorld()->SpawnActor(Class, &Transform);
+		if (!Result)
 		{
-			Proj->Stop();
+			return nullptr;
 		}
-	}*/
+
+		ActorArray.Add(Result);
+		Result->OnDestroyed.AddDynamic(this, &UBulletPoolSubsystem::OnActorDestroyed);
+	}
+
+	return Result;
 }
 
-UBulletPoolSubsystem::~UBulletPoolSubsystem()
+void UBulletPoolSubsystem::ReturnActor(AActor* Actor)
 {
+	if (!Actor || !IsActorInPool(Actor))
+	{
+		return;
+	}
+
+	TArray<AActor*>& Pool = InactiveActors.FindOrAdd(Actor->GetClass());
+	if (!Pool.Contains(Actor))
+	{
+		Actor->SetActorTickEnabled(false);
+		Pool.Add(Actor);
+	}
 }
 
-void UBulletPoolSubsystem::GetActiveBullet(const FTransform& NewPosition)
+bool UBulletPoolSubsystem::IsActorInPool(AActor* Actor) const
 {
-	//go through the list until a viable bullet appears
-	// return pointer to it
-
-	//iteration through TArray
-	// if iterator is disabled
-
-		// Projectile* Result = <<
-		// Result = Transform.GetScale3D() * Result->GetActorScale(); // crutch
-		// Result->SetActorTransform(FTransform(Transform.GetRotation(), Transform.GetLocation(), CorrectedScale), false, nullptr, ETeleportType::ResetPhysics);
-		// Result->SetActorTickEnabled(true);
-		//return Result;
-
-	//in cannon call...
-		// UActorPoolSubsystem* Pool = GetWorld()->GetSubsystem<UActorPoolSubsystem>();
-		//FTransform spawntransform(ProjectileSpawnPoint->GetComponentRotation(), ProjectileSpawnPoint->GetComponentLocation(), FVector:OneVector);
-		//AProjectile* Projectile = Cast<AProjectile>(Pool->RetrieveActor(ProjectileClass, SpawnTransform));
-		//if (Projectile) { Projectile->Start(); }
-
-	// in projectile on death...
-	// Stop() instead of Destroy()
-	// Stop() is...>
-		//PrimaryActorTick.SetTickFunctionEnable(false);
-		//Mesh->SetHiddenInGame(true);
-		//Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-		//if its in the pool, like above (special function IsActorInPool(this)
-		// return actor , I guess I can just say "disable" or something
-		// else destroy (doesnt matter because we dont make extraneous objects
-
-	// Start() means
-		// enable tick
-		// mesh unhide
-		// mesh cpllision enabled to QueryAndPhysics
-		// StartPosition = GetActorLocation();
-		// 
-
-
+	return ActorArray.Contains(Actor);
 }
+
+/// TODO: understand what this method means
+bool UBulletPoolSubsystem::DoesSupportWorldType(EWorldType::Type WorldType) const
+{
+	return WorldType == EWorldType::Game || WorldType == EWorldType::PIE;
+}
+
+void UBulletPoolSubsystem::OnActorDestroyed(AActor* Actor)
+{
+	check(IsActorInPool(Actor));
+	TArray<AActor*>* Pool = InactiveActors.Find(Actor->GetClass());
+	if (Pool && Pool->Contains(Actor))
+	{
+		Pool->Remove(Actor);
+	}
+	ActorArray.Remove(Actor);
+}
+

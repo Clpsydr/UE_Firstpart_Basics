@@ -41,6 +41,20 @@ public:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
 		class UHPcomponent* TankHP;
 
+	UFUNCTION(BlueprintPure, Category = "Turret")
+		FVector GetTurretForwardVector();
+
+	UFUNCTION(BlueprintPure, Category = "AI|Movement|Patrolling")
+		const TArray<FVector>& GetPatrolPoints()
+	{
+		return PatrolPoints;
+	};
+
+	UFUNCTION(BlueprintPure, Category = "AI|Movement|Patrolling")
+		float GetMovementPrecision()
+	{
+		return MovementPrecision;
+	};
 
 protected:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
@@ -61,6 +75,15 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
 		class UBoxComponent* HitCollider;
 
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Effects")
+		class  UParticleSystemComponent* DamageEffect;
+	
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Effects")
+		class  UParticleSystemComponent* DestructionEffect;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Effects")
+		class UAudioComponent* DeathSoundEffect;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement|Speed")
 		float MoveSpeed = 1500.f;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement|Speed")
@@ -71,10 +94,18 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement|Motion")
 		float TurretMotionSmoothness = 0.3f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI | Movement", Meta = (MakeEditWidget = true))
+		TArray<FVector> PatrolPoints;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI | Movement")
+		float MovementPrecision = 50.f;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Turret")
 		TSubclassOf<class ACannon> MainCannonClass;	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Turret")
 		TSubclassOf<class ACannon> SubWeaponClass;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Components")
+		TSubclassOf<class AAmmoBox> ItemDrop;
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Health")  
 		void OnHealthChanged(float Damage);
@@ -84,6 +115,7 @@ protected:
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
 
 private:
 	UPROPERTY()
@@ -99,8 +131,12 @@ private:
 	float TargetRotationValue;
 
 	FVector TurretTargetAngle;
+
+	FTimerHandle LastMomentsTimer;
 	
 public:	
+	void DestroyCrutch();
+
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 

@@ -2,6 +2,7 @@
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "DrawDebugHelpers.h"
+#include "BulletPoolSubsystem.h"
 #include "Damageable.h"
 #include "tankogeddon.h"
 
@@ -24,13 +25,8 @@ void AProjectile::OnMeshHit(class UPrimitiveComponent* HitComp, class AActor* Ot
 		return;
 	}
 
-	// for destructible environment group
-	if (OtherActor && OtherComp && OtherComp->GetCollisionObjectType() == ECC_WorldDynamic)
-	{
-		OtherActor->Destroy();
-	}
 	// for interactive objects with expected interfaces to manage health and damage
-	else if (IDamageable* Damageable = Cast<IDamageable>(OtherActor))
+	if (IDamageable* Damageable = Cast<IDamageable>(OtherActor))
 	{
 		FDamageData DmgData;
 		DmgData.DamageValue = Damage;
@@ -38,13 +34,20 @@ void AProjectile::OnMeshHit(class UPrimitiveComponent* HitComp, class AActor* Ot
 		DmgData.DamageCause = this;
 		Damageable->TakeDamage(DmgData);
 	}
+	else if (OtherActor && OtherComp && OtherComp->GetCollisionObjectType() == ECC_WorldDynamic) // for destructible environment group
+	{
+		OtherActor->Destroy();
+	}
 
-	Destroy();
+	Stop();
 }
 
 void AProjectile::Start()
 {
+	PrimaryActorTick.SetTickFunctionEnable(true);
 	StartPosition = GetActorLocation();
+	Mesh->SetHiddenInGame(false);
+	Mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 }
 
 void AProjectile::Stop()
@@ -52,6 +55,16 @@ void AProjectile::Stop()
 	PrimaryActorTick.SetTickFunctionEnable(false);
 	Mesh->SetHiddenInGame(true);
 	Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	UBulletPoolSubsystem* BulletPool = GetWorld()->GetSubsystem<UBulletPoolSubsystem>();
+	if (BulletPool->IsActorInPool(this))
+	{
+		BulletPool->ReturnActor(this);
+	}
+	else
+	{
+		Destroy();
+	}
 }
 
 
@@ -64,7 +77,7 @@ void AProjectile::Tick(float DeltaTime)
 
 	if (FVector::Dist(GetActorLocation(), StartPosition) > FireRange)
 	{
-		Destroy();
+		Stop();
 	}
 }
 

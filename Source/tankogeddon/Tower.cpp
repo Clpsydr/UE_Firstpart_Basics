@@ -4,6 +4,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "HPcomponent.h"
+#include "DrawDebugHelpers.h"
 #include "tankogeddon.h"
 
 ATower::ATower()
@@ -66,10 +67,13 @@ void ATower::Destroyed()
 void ATower::Targeting()
 {
 	if (IsPlayerInRange())
+	{
 		AimAtPlayer();
-
-	if (CanFire() && Cannon && Cannon->IsReadyToFire())
-		Fire();
+		if (CanFire() && Cannon && Cannon->IsReadyToFire())
+			Fire();
+	}
+	else
+		Idle();
 }
 
 void ATower::AimAtPlayer()
@@ -81,9 +85,43 @@ void ATower::AimAtPlayer()
 	TurretMesh->SetWorldRotation(FMath::RInterpConstantTo(CurrentRotation, TargetRotation, GetWorld()->GetDeltaSeconds(), TargetingSpeed));
 }
 
+void ATower::Idle()
+{
+	FRotator TargetRotation = FRotator(0.f,0.f,0.f);
+	FRotator CurrentRotation = TurretMesh->GetComponentRotation();
+	TargetRotation.Pitch = CurrentRotation.Pitch;
+	TargetRotation.Roll = CurrentRotation.Roll;
+	TargetRotation.Yaw = CurrentRotation.Yaw + 1.f;
+	TurretMesh->SetWorldRotation(FMath::RInterpConstantTo(CurrentRotation, TargetRotation, GetWorld()->GetDeltaSeconds(), TargetingSpeed));
+}
+
 bool ATower::IsPlayerInRange()
 {
-	return FVector::DistSquared(PlayerPawn->GetActorLocation(), GetActorLocation()) <= FMath::Square(TargetingRange);
+	if (FVector::DistSquared(PlayerPawn->GetActorLocation(), GetActorLocation()) > FMath::Square(TargetingRange))
+	{
+		return false;
+	}
+
+	FHitResult HitResult;
+	FVector TraceStart = GetActorLocation();
+	FVector TraceEnd = PlayerPawn->GetActorLocation();
+	FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("TurretVisionTrace")), true, this);
+	TraceParams.bReturnPhysicalMaterial = false;
+
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, TraceParams))
+	{
+		DrawDebugLine(GetWorld(), TraceStart, HitResult.Location, FColor::Blue, false, 0.1f, 0, 5);
+		if (HitResult.Actor != PlayerPawn)
+		{
+			return false;
+		}
+		return true;
+	}
+	else
+	{
+		DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor::Blue, false, 0.1f, 0, 5);
+		return false;
+	}
 }
 
 void ATower::Fire()
@@ -99,7 +137,6 @@ bool ATower::CanFire()
 	DirectionToPlayer.Normalize();
 	float AimAngle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(TargetingDirection, DirectionToPlayer)));
 	return AimAngle <= Accuracy;
-
 }
 
 // Called every frame

@@ -3,8 +3,14 @@
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/ArrowComponent.h"
+#include "BulletPoolSubsystem.h"
 #include "Damageable.h"
+#include "Components/BoxComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Particles/ParticleSystemComponent.h"
+#include "Components/AudioComponent.h"
+#include "Camera/CameraShakeBase.h"
+#include "GameFramework/ForceFeedbackEffect.h"
 
 ACannon::ACannon()
 {
@@ -18,6 +24,14 @@ ACannon::ACannon()
 
 	ProjectileSpawnPoint = CreateDefaultSubobject<UArrowComponent>(TEXT("Spawn point"));
 	ProjectileSpawnPoint->SetupAttachment(Mesh);
+
+	ShootEffect = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Shoot effect"));
+	ShootEffect->SetupAttachment(ProjectileSpawnPoint);
+	LaserEffect = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Laser effect"));
+	LaserEffect->SetupAttachment(ProjectileSpawnPoint);
+
+	FireSoundEffect = CreateDefaultSubobject<UAudioComponent>(TEXT("Explosion Sound"));
+	FireSoundEffect->SetupAttachment(ProjectileSpawnPoint);
 }
 
 void ACannon::Fire()
@@ -28,11 +42,7 @@ void ACannon::Fire()
 	}
 	bIsReadyToFire = false;
 	Ammo--;
-
-	Burst(1, FiringType); // TODO relies on burst cooldown instead of a firerate, needs fixing
-
-	// timer function is bound to current world 
-	GetWorld()->GetTimerManager().SetTimer(ReloadTimerHandle, this, &ACannon::Reload, 1.f / FireRate, false);
+	Burst(1, FiringType);
 }
 
 void ACannon::AltFire()
@@ -52,19 +62,37 @@ void ACannon::Burst(int count, ECannonType currentFiringType)
 {
 	if (count == 0)
 	{
-		GetWorld()->GetTimerManager().SetTimer(ReloadTimerHandle, this, &ACannon::Reload, BurstDelay, false);
+		GetWorld()->GetTimerManager().SetTimer(ReloadTimerHandle, this, &ACannon::Reload, 1.f / FireRate, false);
 	}
 	else
 	{
+		if (GetOwner() == GetWorld()->GetFirstPlayerController()->GetPawn())
+		{
+			if (ShootJoypadFeedback)
+			{
+				FForceFeedbackParameters Params;
+				Params.bLooping = false;
+				Params.Tag = TEXT("ShootFFParams");
+				GetWorld()->GetFirstPlayerController()->ClientPlayForceFeedback(ShootJoypadFeedback);
+			}
+
+			if (ShootCameraFeedback)
+			{
+				GetWorld()->GetFirstPlayerController()->ClientPlayCameraShake(ShootCameraFeedback);
+			}
+		}
+
 		BurstTimer.BindUFunction(this, FName("Burst"), count - 1, currentFiringType);
 		GetWorld()->GetTimerManager().SetTimer(BurstTimerHandle, BurstTimer, BurstDelay, false);
 
 		if (currentFiringType == ECannonType::FireProjectile)
 		{
-			//GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Orange, TEXT("projectile n " + FString::FromInt(BurstSize- count + 1)));
+			ShootEffect->ActivateSystem();
+			FireSoundEffect->Play();
 
-			AProjectile* Projectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, ProjectileSpawnPoint->GetComponentLocation(),
-				ProjectileSpawnPoint->GetComponentRotation());
+			UBulletPoolSubsystem* BulletPool = GetWorld()->GetSubsystem<UBulletPoolSubsystem>();
+			FTransform SpawnTransform(ProjectileSpawnPoint->GetComponentRotation(), ProjectileSpawnPoint->GetComponentLocation(), FVector::OneVector);
+			AProjectile* Projectile = Cast<AProjectile>(BulletPool->RetrieveActor(ProjectileClass, SpawnTransform));
 			if (Projectile)
 			{
 				Projectile->Start();
@@ -72,22 +100,21 @@ void ACannon::Burst(int count, ECannonType currentFiringType)
 		}
 		else if (currentFiringType == ECannonType::FireTrace)
 		{
-			GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Red, TEXT("laser beam n " + FString::FromInt(BurstSize - count + 1)));
+			FireSoundEffect->Play();
 
 			FHitResult HitResult;
 			FVector TraceStart = ProjectileSpawnPoint->GetComponentLocation();
 			FVector TraceEnd = ProjectileSpawnPoint->GetComponentLocation() + ProjectileSpawnPoint->GetForwardVector() * FireRange;
 			FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("FireTrace")), true, this);
 			TraceParams.bReturnPhysicalMaterial = false;
-			if (GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, TraceParams))
+			if (GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECollisionChannel::ECC_Pawn, TraceParams))
 			{
-				DrawDebugLine(GetWorld(), TraceStart, HitResult.Location, FColor::Red, false, 0.5f, 0, 5.f);
-
-				if (HitResult.Actor == this)  //GetInstigator()
-				{
-					GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Orange, TEXT("Laser has hit itself"));
-					return;
-				}
+				LaserEffect->SetBeamSourcePoint(0, TraceStart, 0);
+				LaserEffect->SetFloatParameter("Length", FVector::DistSquared(TraceStart, HitResult.Location));
+				LaserEffect->SetBeamEndPoint(0, HitResult.Location);
+				LaserEffect->SetBeamTargetPoint(0, HitResult.Location, 0);
+				LaserEffect->ActivateSystem();
+				//DrawDebugLine(GetWorld(), TraceStart, HitResult.Location, FColor::Red, false, 0.5f, 0, 5.f);
 
 				if (HitResult.Actor.IsValid() && HitResult.Component.IsValid(), HitResult.Component->GetCollisionObjectType() == ECC_WorldDynamic)
 				{
@@ -96,7 +123,7 @@ void ACannon::Burst(int count, ECannonType currentFiringType)
 				}
 				else if (IDamageable* Damageable = Cast<IDamageable>(HitResult.Actor))
 				{
-					GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Orange, TEXT("Hit turret " + HitResult.Actor->GetName()));
+					GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Orange, TEXT("Hit a " + HitResult.Actor->GetName()));
 					FDamageData DmgData;
 					DmgData.DamageValue = FireDamage;
 					DmgData.Instigator = GetInstigator();
@@ -106,7 +133,12 @@ void ACannon::Burst(int count, ECannonType currentFiringType)
 			}
 			else
 			{
-				DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor::Red, false, 0.5f, 0, 5.f);
+				LaserEffect->SetBeamSourcePoint(0, TraceStart, 0);
+				LaserEffect->SetFloatParameter("Length", FVector::DistSquared(TraceStart, TraceEnd));
+				LaserEffect->SetBeamEndPoint(0,TraceEnd);
+				LaserEffect->SetBeamTargetPoint(0, TraceEnd, 0);
+				LaserEffect->ActivateSystem();
+				//DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor::Red, false, 0.5f, 0, 5.f);
 			}
 		}
 	}
