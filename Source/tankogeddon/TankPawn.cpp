@@ -192,12 +192,6 @@ void ATankPawn::OnHealthChanged_Implementation(float Damage)
 	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Blue, TEXT("Tank HP left " + FString::SanitizeFloat(TankHP->GetHPRatio() * 100) + "%"));
 }
 
-// somehow I cant just evoke Destroy method on timer, so I made this sort of thing instead.
-void ATankPawn::DestroyCrutch()
-{
-	Destroy();
-}
-
 // instead of leaving sound outside of the pawn (which is probably the right way), I make the tank intangible to let it play the effects
 void ATankPawn::OnDie_Implementation()
 {
@@ -214,11 +208,10 @@ void ATankPawn::OnDie_Implementation()
 	BodyMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	HitCollider->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	
-	
 	Cast<APatrolAIController>(GetController())->TurnOff();
 	GetController()->UnPossess();
 	SubWeapon->Destroy(); 
-	//Cannon->Destroy();  // Throws exception, probably because something still attempts to call for the cannon, or bullet requests instigator?
-	//TODO: Find a better way to turn the whole actor off with its subobjects 
-	GetWorldTimerManager().SetTimer(LastMomentsTimer, this, &ATankPawn::DestroyCrutch, 3.f, false);
+	Cannon->Destroy();  // Throws exception, probably because something still attempts to call for the cannon
+	
+	SetLifeSpan(3.f);
 }

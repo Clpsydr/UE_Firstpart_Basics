@@ -132,8 +132,6 @@ private:
 
 	FVector TurretTargetAngle;
 
-	FTimerHandle LastMomentsTimer;
-	
 public:	
 	void DestroyCrutch();
 
