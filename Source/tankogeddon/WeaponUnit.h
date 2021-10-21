@@ -2,15 +2,14 @@
 #include "CoreMinimal.h"
 #include "Components/ArrowComponent.h"
 #include "Components/BoxComponent.h"
-#include "GameFramework/Actor.h"
 #include "Cannon.h"
-#include "Damageable.h"
-#include "GameFramework/Actor.h"
+#include "GameFramework/Pawn.h"
 #include "HPcomponent.h"
+#include "Damageable.h"
 #include "WeaponUnit.generated.h"
 
 UCLASS()
-class TANKOGEDDON_API AWeaponUnit : public AActor, public IDamageable
+class TANKOGEDDON_API AWeaponUnit : public APawn, public IDamageable
 {
 	GENERATED_BODY()
 	
@@ -28,6 +27,15 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
 		class UArrowComponent* CannonSetupPoint;
 
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Effects")
+		class UParticleSystemComponent* DamageEffect;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Effects")
+		class UParticleSystemComponent* DestructionEffect;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Effects")
+		class UAudioComponent* DeathSoundEffect;
+
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
 		class UBoxComponent* HitCollider;
 
@@ -40,14 +48,6 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void Destroyed() override;
 
-	virtual void Fire();
-
-	UFUNCTION(BlueprintNativeEvent, Category = "Health")  //Allows to redefine function in blueprints
-		void OnHealthChanged(float Damage);
-
-	UFUNCTION(BlueprintNativeEvent, Category = "Health")
-		void OnDie();
-
 	UPROPERTY()
 		class ACannon* Cannon;
 
@@ -55,5 +55,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void TakeDamage(const FDamageData& DamageData) override;
+
+	virtual void Fire();
 
 };

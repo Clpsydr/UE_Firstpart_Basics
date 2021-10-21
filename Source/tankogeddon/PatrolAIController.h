@@ -13,11 +13,10 @@ class TANKOGEDDON_API APatrolAIController : public AAIController
 
 	protected:
 		UPROPERTY()
-			class ATankPawn* TankPawn;
+			class ATankUnit* TankPawn;
 			class APawn* PlayerPawn;
 
 			int32 CurrentPatrolPointIndex = 0;
-			TArray<FVector> AIPatrolPoints;
 
 			UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Targeting")
 				float TargetingRange = 3000.f;

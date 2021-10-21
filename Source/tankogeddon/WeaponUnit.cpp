@@ -4,9 +4,10 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "HPcomponent.h"
+#include "Particles/ParticleSystemComponent.h"
+#include "Components/AudioComponent.h"
 #include "tankogeddon.h"
 
-// Sets default values
 AWeaponUnit::AWeaponUnit()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -24,9 +25,16 @@ AWeaponUnit::AWeaponUnit()
 	HitCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("Hit collider"));
 	HitCollider->SetupAttachment(BodyMesh);
 
+	DamageEffect = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Damage Effect"));
+	DamageEffect->SetupAttachment(BodyMesh);
+
+	DestructionEffect = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Death Effect"));
+	DestructionEffect->SetupAttachment(BodyMesh);
+
+	DeathSoundEffect = CreateDefaultSubobject<UAudioComponent>(TEXT("Death Sound"));
+	DeathSoundEffect->SetupAttachment(BodyMesh);
+
 	HP = CreateDefaultSubobject<UHPcomponent>(TEXT("Health component"));
-	HP->OnHealthChanged.AddDynamic(this, &AWeaponUnit::OnHealthChanged);
-	HP->OnDie.AddDynamic(this, &AWeaponUnit::OnDie);
 }
 
 // Called when the game starts or when spawned
@@ -38,8 +46,6 @@ void AWeaponUnit::BeginPlay()
 	Params.Owner = this;
 	AWeaponUnit::Cannon = GetWorld()->SpawnActor<ACannon>(AWeaponUnit::CannonClass, Params);
 	AWeaponUnit::Cannon->AttachToComponent(AWeaponUnit::CannonSetupPoint, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-
-	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 4.f, FColor::White, TEXT("base class performed beginplay, attached a turret"));
 }
 
 void AWeaponUnit::Destroyed()
@@ -64,17 +70,7 @@ void AWeaponUnit::Tick(float DeltaTime)
 
 void AWeaponUnit::TakeDamage(const FDamageData& DamageData)
 {
+	DamageEffect->ActivateSystem();
 	HP->TakeDamage(DamageData);
 }
-
-void AWeaponUnit::OnHealthChanged_Implementation(float Damage)
-{
-	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Blue, TEXT("HP left " + FString::SanitizeFloat(HP->GetHPRatio() * 100) + "%"));
-}
-
-void AWeaponUnit::OnDie_Implementation()
-{
-	Destroy();
-}
-
 

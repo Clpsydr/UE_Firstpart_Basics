@@ -1,10 +1,15 @@
 #include "EnemyTower.h"
+#include "Components/AudioComponent.h"
+#include "Particles/ParticleSystemComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
 AEnemyTower::AEnemyTower()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.TickInterval = 0.005f;
+
+	HP->OnHealthChanged.AddDynamic(this, &AEnemyTower::OnHealthChanged);
+	HP->OnDie.AddDynamic(this, &AEnemyTower::OnDie);
 }
 
 void AEnemyTower::BeginPlay()
@@ -88,4 +93,24 @@ void AEnemyTower::Tick(float DeltaTime)
 	{
 		Targeting();
 	}
+}
+
+void AEnemyTower::OnHealthChanged_Implementation(float Damage)
+{
+	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Blue, TEXT("Tower HP left " + FString::SanitizeFloat(HP->GetHPRatio() * 100) + "%"));
+}
+
+void AEnemyTower::OnDie_Implementation()
+{
+	DestructionEffect->ActivateSystem();
+	DeathSoundEffect->Play();
+
+	PrimaryActorTick.SetTickFunctionEnable(false);
+	BodyMesh->SetHiddenInGame(true);
+	TurretMesh->SetHiddenInGame(true);
+	BodyMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	HitCollider->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	Cannon->Destroy();  // Throws exception, probably because something still attempts to call for the cannon
+	SetLifeSpan(3.f);
 }

@@ -3,9 +3,6 @@
 #include "WeaponUnit.h"
 #include "EnemyTower.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class TANKOGEDDON_API AEnemyTower : public AWeaponUnit
 {
@@ -30,11 +27,16 @@ class TANKOGEDDON_API AEnemyTower : public AWeaponUnit
 		bool CanFire();
 		void Idle();
 
+		UFUNCTION(BlueprintNativeEvent, Category = "Health")  //Allows to redefine function in blueprints
+			void OnHealthChanged(float Damage);
+
+		UFUNCTION(BlueprintNativeEvent, Category = "Health")
+			void OnDie();
+
 	private:
 		UPROPERTY()
 			class APawn* PlayerPawn;
 
 	public:
 		virtual void Tick(float DeltaTime) override;
-
 };

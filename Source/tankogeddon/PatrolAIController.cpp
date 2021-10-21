@@ -1,28 +1,21 @@
 #include "PatrolAIController.h"
-#include "TankPawn.h"
+#include "TankUnit.h"
+#include "Engine/TargetPoint.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "DrawDebugHelpers.h"
 
 void APatrolAIController::BeginPlay()
 {
 	Super::BeginPlay();
-
-	TankPawn = Cast<ATankPawn>(GetPawn());
-	if (TankPawn)
-	{
-		for (const FVector& Point : TankPawn->GetPatrolPoints())
-		{
-			AIPatrolPoints.Add(TankPawn->GetActorLocation() + Point);
-		}
-	}
-
 	PlayerPawn = GetWorld()->GetFirstPlayerController()->GetPawn();
 }
 
 void APatrolAIController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if (TankPawn && bIsAlive) 
+
+	TankPawn = Cast<ATankUnit>(GetPawn());
+	if (TankPawn && bIsAlive && PlayerPawn) 
 	{
 		MoveToNextPoint();
 		Targeting();
@@ -31,6 +24,7 @@ void APatrolAIController::Tick(float DeltaTime)
 
 void APatrolAIController::MoveToNextPoint()
 {
+	const TArray<class ATargetPoint*>& AIPatrolPoints = TankPawn->GetPatrolPoints();
 	if (AIPatrolPoints.Num() == 0)
 	{
 		return;
@@ -38,7 +32,7 @@ void APatrolAIController::MoveToNextPoint()
 
 	TankPawn->MoveForward(1.f);
 	FVector SelfLocation = TankPawn->GetActorLocation();
-	FVector CurrentPoint = AIPatrolPoints[CurrentPatrolPointIndex];
+	FVector CurrentPoint = AIPatrolPoints[CurrentPatrolPointIndex]->GetActorLocation();
 	if (FVector::DistSquared(SelfLocation, CurrentPoint) <= FMath::Square(TankPawn->GetMovementPrecision()))
 	{
 		CurrentPatrolPointIndex++;
