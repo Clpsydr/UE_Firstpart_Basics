@@ -13,6 +13,7 @@
 #include "Components/AudioComponent.h"
 #include "BulletPoolSubsystem.h"
 #include "PatrolAIController.h"
+#include "TankChunks.h"
 #include "tankogeddon.h"
 
 ATankUnit::ATankUnit()
@@ -145,6 +146,11 @@ void ATankUnit::OnDie_Implementation()
 	FTransform SpawnTransform(GetActorRotation(), GetActorLocation(), FVector::OneVector);
 	AAmmoBox* AmmoBox = Cast<AAmmoBox>(BulletPool->RetrieveActor(ItemDrop, SpawnTransform));
 
+	for (int i = 0; i < DestroyEffectNumber; i++)
+	{
+		ChunkGeneration(FVector((FMath::Rand() % 5) * 0.01 - 0.025, (FMath::Rand() % 5) * 0.01 - 0.025, 1.f), 1.f);
+	}
+
 	PrimaryActorTick.SetTickFunctionEnable(false);
 	BodyMesh->SetHiddenInGame(true);
 	TurretMesh->SetHiddenInGame(true);
@@ -154,7 +160,26 @@ void ATankUnit::OnDie_Implementation()
 	Cast<APatrolAIController>(GetController())->TurnOff(); //Bad stuff, code will die together with player pawn
 	GetController()->UnPossess();
 	SubWeapon->Destroy();
-	Cannon->Destroy();  // Throws exception, probably because something still attempts to call for the cannon
+	Cannon->Destroy();  
 
-	SetLifeSpan(3.f);
+	SetLifeSpan(2.f);
+}
+
+//TODO::transfer instigator impulse there to direct chunks in the appropriate direction with appropriate bullet power
+void ATankUnit::ChunkGeneration(FVector HitDirection, float HitPower)
+{
+	FActorSpawnParameters Params;
+	Params.Owner = this;
+	ATankChunks* NewChunk = GetWorld()->SpawnActor<ATankChunks>(PostDeathFragments, GetActorLocation()+FVector(0.f,0.f,100.f) , GetActorRotation(), Params);
+	UPrimitiveComponent* Mesh = Cast<UPrimitiveComponent>(NewChunk->GetRootComponent());
+	if (Mesh)
+	{
+		if (Mesh->IsSimulatingPhysics())
+		{
+			FVector ForceVector = HitDirection;
+			Mesh->AddImpulse(ForceVector * HitPower, NAME_None, true);
+			Mesh->AddTorque(FVector::RightVector, NAME_None, true);
+		}
+	}
+
 }

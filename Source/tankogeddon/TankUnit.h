@@ -83,6 +83,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Components")
 		TSubclassOf<class AAmmoBox> ItemDrop;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Effects")
+		TSubclassOf<class ATankChunks> PostDeathFragments;
+
 	UFUNCTION(BlueprintNativeEvent, Category = "Health")  //Allows to redefine function in blueprints
 		void OnHealthChanged(float Damage);
 
@@ -101,6 +104,8 @@ private:
 	float CurrentRotationValue;
 	float TargetForwardAxisValue;
 	float TargetRotationValue;
+	
+	int DestroyEffectNumber = 6;
 
 	FVector TurretTargetAngle;
 
@@ -109,5 +114,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual void Tick(float DeltaTime) override;
+
+	void ChunkGeneration(FVector HitDirection, float HitPower);
 
 };

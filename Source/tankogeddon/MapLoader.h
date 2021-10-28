@@ -44,7 +44,6 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level loading params")
         int RequiredFactories = 1;
 
-
 private:
     void SetActiveLights();
 
