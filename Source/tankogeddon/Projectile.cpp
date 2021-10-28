@@ -17,6 +17,34 @@ AProjectile::AProjectile()
 	RootComponent = Mesh;
 }
 
+void AProjectile::ApplyDamage(AActor* HitActor)
+{
+	IDamageable* DamageableActor = Cast<IDamageable>(HitActor);
+	if (DamageableActor)
+	{
+		FDamageData DamageData;
+		DamageData.DamageValue = Damage;
+		DamageData.Instigator = GetOwner();
+		DamageData.DamageCause = this;
+
+		DamageableActor->TakeDamage(DamageData);
+	}
+}
+
+void AProjectile::ApplyPhysics(AActor* HitActor, AActor* OtherActor)
+{
+	UPrimitiveComponent* HitMesh = Cast<UPrimitiveComponent>(HitActor->GetRootComponent());
+	if (HitMesh)
+	{
+		if (HitMesh->IsSimulatingPhysics())
+		{
+			FVector ForceVector = OtherActor->GetActorLocation() - GetActorLocation();
+			ForceVector.Normalize();
+			HitMesh->AddImpulse(ForceVector * AOEPower, NAME_None, true);
+		}
+	}
+}
+
 void AProjectile::OnMeshHit(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& HitResult)
 {
 	if (OtherActor == GetInstigator()) 	// bullet hitting its parent shouldn't do anything (it still does though)
@@ -65,30 +93,12 @@ void AProjectile::OnMeshHit(class UPrimitiveComponent* HitComp, class AActor* Ot
 
 				if (bIsAOEDamaging)
 				{
-					IDamageable* DamageableActor = Cast<IDamageable>(HitActor);
-					if (DamageableActor)
-					{
-						FDamageData DamageData;
-						DamageData.DamageValue = Damage;
-						DamageData.Instigator = GetOwner();
-						DamageData.DamageCause = this;
-
-						DamageableActor->TakeDamage(DamageData);
-					}
+					ApplyDamage(HitActor);
 				}
 
 				if (bIsAOEPushing)
 				{
-					UPrimitiveComponent* HitMesh = Cast<UPrimitiveComponent>(HitActor->GetRootComponent());
-					if (HitMesh)
-					{
-						if (HitMesh->IsSimulatingPhysics())
-						{
-							FVector ForceVector = OtherActor->GetActorLocation() - GetActorLocation();
-							ForceVector.Normalize();
-							HitMesh->AddImpulse(ForceVector * AOEPower, NAME_None, true);
-						}
-					}
+					ApplyPhysics(HitActor, OtherActor);
 				}
 			}
 		}
@@ -102,14 +112,7 @@ void AProjectile::OnMeshHit(class UPrimitiveComponent* HitComp, class AActor* Ot
 			OtherComp->AddImpulseAtLocation(Impulse, HitResult.ImpactPoint);
 		}
 
-		if (IDamageable* Damageable = Cast<IDamageable>(OtherActor))
-		{
-			FDamageData DmgData;
-			DmgData.DamageValue = Damage;
-			DmgData.Instigator = GetInstigator();
-			DmgData.DamageCause = this;
-			Damageable->TakeDamage(DmgData);
-		}
+		ApplyDamage(OtherActor);
 	}
 
 	Stop();

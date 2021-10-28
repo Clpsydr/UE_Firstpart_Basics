@@ -48,6 +48,9 @@ protected:
 	UFUNCTION()
 		virtual void OnMeshHit(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& HitResult);
 
+		void ApplyDamage(AActor* HitActor);
+		void ApplyPhysics(AActor* HitActor, AActor* OtherActor);
+
 private:
 	FVector StartPosition;
 

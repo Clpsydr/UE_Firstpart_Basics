@@ -15,7 +15,6 @@ void APhysBullet::Start()
 
 	MovementComponent->Velocity = GetActorForwardVector() * MoveSpeed;
 	MovementComponent->SetComponentTickEnabled(true);
-	Mesh->AddTorque(FVector::UpVector, NAME_None, true);
 }
 
 void APhysBullet::Stop()
@@ -28,6 +27,9 @@ void APhysBullet::Stop()
 
 void APhysBullet::Tick(float DeltaSeconds)
 {
+	float Rotation = GetActorRotation().Roll + 500 * DeltaSeconds;
+	SetActorRotation(FRotator(0.f, 0.f, Rotation));
+
 	if (GetActorLocation().Z < -10000.f)
 	{
 		Stop();
