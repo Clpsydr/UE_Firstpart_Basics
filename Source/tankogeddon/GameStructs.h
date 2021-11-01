@@ -9,7 +9,7 @@ enum class ECannonType : uint8
 {
 	FireProjectile = 0 UMETA(Display = "projectile fire"),
 	FireTrace = 1 UMETA(Display = "tracing fire"),
-	FireCharge = 2 UMETA(Display = "charging fire")
+	FireMortar = 2 UMETA(Display = "mortar fire")
 };
 
 USTRUCT(BlueprintType)  //USTRUCT(BlueprintType)  < possible to use in blueprients, but needs properties to be filled as well

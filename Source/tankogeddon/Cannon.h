@@ -3,6 +3,7 @@
 #include "GameFramework/Actor.h"
 #include "GameStructs.h"
 #include "Projectile.h"
+#include "PhysBullet.h"
 #include "Cannon.generated.h"
 
 UCLASS()
@@ -56,12 +57,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Components")
 		ECannonType FiringType = ECannonType::FireProjectile;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (EditCondition = "FiringType == ECannonType::FireProjectile", EditConditionHides), 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (EditCondition = "FiringType == ECannonType::FireProjectile || FiringType == ECannonType::FireMortar", EditConditionHides), 
 		Category = "Fire params") 
 		TSubclassOf<class AProjectile> ProjectileClass;
-
-	
-
 
 private:
 	FTimerHandle ReloadTimerHandle;
@@ -84,7 +82,7 @@ public:
 	UFUNCTION()
 		void Refill(int amount);
 
-	void CycleWeapons();
+	void CycleWeapons(ECannonType NewType);
 
 	bool IsOutOfAmmo(ECannonType Type);
 	bool IsReadyToFire();

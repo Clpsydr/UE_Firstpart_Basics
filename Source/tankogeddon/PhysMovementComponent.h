@@ -18,7 +18,16 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Gravity params")
 		FVector Velocity = FVector::ZeroVector;
 
-public:	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Gravity params")
+		float MaxAltitude = 3000.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Gravity params")
+		float TrajectoryDuration = 3.f;
+
+	FVector TargetLocation;
+	void ReinitValues();
+
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
 };

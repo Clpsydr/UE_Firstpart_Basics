@@ -1,7 +1,7 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 #include "PhysBullet.h"
 #include "PhysMovementComponent.h"
 #include "Damageable.h"
+#include "DrawDebugHelpers.h"
 #include "Components/PrimitiveComponent.h"
 
 APhysBullet::APhysBullet()
@@ -13,7 +13,7 @@ void APhysBullet::Start()
 {
 	Super::Start();
 
-	MovementComponent->Velocity = GetActorForwardVector() * MoveSpeed;
+	MovementComponent->ReinitValues();
 	MovementComponent->SetComponentTickEnabled(true);
 }
 
@@ -27,13 +27,18 @@ void APhysBullet::Stop()
 
 void APhysBullet::Tick(float DeltaSeconds)
 {
-	float Rotation = GetActorRotation().Roll + 500 * DeltaSeconds;
-	SetActorRotation(FRotator(0.f, 0.f, Rotation));
+	float Rotation = Mesh->GetComponentRotation().Roll + 500 * DeltaSeconds;
+	Mesh->SetRelativeRotation(FRotator(0.f, 0.f, Rotation));
 
 	if (GetActorLocation().Z < -10000.f)
 	{
 		Stop();
 	}
+}
+
+void APhysBullet::AimAt(FVector& NewDirection)
+{	
+	MovementComponent->TargetLocation = NewDirection;
 }
 
 void APhysBullet::OnMeshHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& HitResult)
@@ -50,6 +55,7 @@ void APhysBullet::OnMeshHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 
 	FQuat Rotation = FQuat::Identity;
 
+	DrawDebugSphere(GetWorld(), StartPos, 5, 8, FColor::Red, true, 1, 0, 2);
 	//GetWorld()->DebugDrawTraceTag = "AOE Trace";
 
 	bool bSweepResult = GetWorld()->SweepMultiByChannel

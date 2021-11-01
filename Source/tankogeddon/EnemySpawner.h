@@ -15,7 +15,10 @@ public:
 
 protected:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
-		class USkeletalMeshComponent* BuildingMesh;
+		class UStaticMeshComponent* BuildingMesh;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
+		class UStaticMeshComponent* BuildingDestroyedMesh;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
 		class UArrowComponent* TankSpawnPoint;

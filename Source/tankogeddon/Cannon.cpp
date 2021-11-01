@@ -87,14 +87,14 @@ void ACannon::Burst(int count, ECannonType currentFiringType)
 
 		if (currentFiringType == ECannonType::FireProjectile)
 		{
-			ShootEffect->ActivateSystem();
-			FireSoundEffect->Play();
-
-			UBulletPoolSubsystem* BulletPool = GetWorld()->GetSubsystem<UBulletPoolSubsystem>();
+					UBulletPoolSubsystem* BulletPool = GetWorld()->GetSubsystem<UBulletPoolSubsystem>();
 			FTransform SpawnTransform(ProjectileSpawnPoint->GetComponentRotation(), ProjectileSpawnPoint->GetComponentLocation(), FVector::OneVector);
 			AProjectile* Projectile = Cast<AProjectile>(BulletPool->RetrieveActor(ProjectileClass, SpawnTransform));
 			if (Projectile)
 			{
+				ShootEffect->ActivateSystem();
+				FireSoundEffect->Play();
+
 				Projectile->Start();
 			}
 		}
@@ -109,19 +109,16 @@ void ACannon::Burst(int count, ECannonType currentFiringType)
 			TraceParams.bReturnPhysicalMaterial = false;
 			if (GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECollisionChannel::ECC_Pawn, TraceParams))
 			{
-				LaserEffect->SetBeamSourcePoint(0, TraceStart, 0);
-				LaserEffect->SetFloatParameter("Length", FVector::DistSquared(TraceStart, HitResult.Location));
-				LaserEffect->SetBeamEndPoint(0, HitResult.Location);
-				LaserEffect->SetBeamTargetPoint(0, HitResult.Location, 0);
 				LaserEffect->ActivateSystem();
-				//DrawDebugLine(GetWorld(), TraceStart, HitResult.Location, FColor::Red, false, 0.5f, 0, 5.f);
+				LaserEffect->SetBeamSourcePoint(0, TraceStart, 0);
+				LaserEffect->SetBeamTargetPoint(0, HitResult.Location, 0);
 
-				if (HitResult.Actor.IsValid() && HitResult.Component.IsValid(), HitResult.Component->GetCollisionObjectType() == ECC_WorldDynamic)
+				/*if (HitResult.Actor.IsValid() && HitResult.Component.IsValid(), HitResult.Component->GetCollisionObjectType() == ECC_WorldDynamic)
 				{
 					GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Orange, TEXT("Traced a destructible prop"));
 					HitResult.Actor->Destroy();
-				}
-				else if (IDamageable* Damageable = Cast<IDamageable>(HitResult.Actor))
+				}*/
+				if (IDamageable* Damageable = Cast<IDamageable>(HitResult.Actor))
 				{
 					GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Orange, TEXT("Hit a " + HitResult.Actor->GetName()));
 					FDamageData DmgData;
@@ -133,12 +130,27 @@ void ACannon::Burst(int count, ECannonType currentFiringType)
 			}
 			else
 			{
-				LaserEffect->SetBeamSourcePoint(0, TraceStart, 0);
-				LaserEffect->SetFloatParameter("Length", FVector::DistSquared(TraceStart, TraceEnd));
-				LaserEffect->SetBeamEndPoint(0,TraceEnd);
-				LaserEffect->SetBeamTargetPoint(0, TraceEnd, 0);
 				LaserEffect->ActivateSystem();
-				//DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor::Red, false, 0.5f, 0, 5.f);
+				LaserEffect->SetBeamSourcePoint(0, TraceStart, 0);
+				LaserEffect->SetBeamTargetPoint(0, TraceEnd, 0);
+			}
+		}
+		else if (currentFiringType == ECannonType::FireMortar)
+		{
+			UBulletPoolSubsystem* BulletPool = GetWorld()->GetSubsystem<UBulletPoolSubsystem>();
+			FTransform SpawnTransform(ProjectileSpawnPoint->GetComponentRotation(), ProjectileSpawnPoint->GetComponentLocation(), FVector::OneVector);
+			APhysBullet* Projectile = Cast<APhysBullet>(BulletPool->RetrieveActor(ProjectileClass, SpawnTransform));
+			//AAmmoBox* AmmoBox = Cast<AAmmoBox>(BulletPool->RetrieveActor(ItemDrop, SpawnTransform));
+
+			FVector DirectionToPlayer = ProjectileSpawnPoint->GetComponentLocation() + FireRange;
+			Projectile->AimAt(DirectionToPlayer);
+
+			if (Projectile)
+			{
+				ShootEffect->ActivateSystem();
+				FireSoundEffect->Play();
+
+				Projectile->Start();
 			}
 		}
 	}
@@ -187,16 +199,7 @@ ECannonType ACannon::GetType()
 }
 
 /// quite a dumb way to change weapons, maybe I should make sort of a weapon class or the cannon itself should be one
-void ACannon::CycleWeapons()
+void ACannon::CycleWeapons(ECannonType NewType)
 {
-	if (FiringType == ECannonType::FireProjectile)
-	{
-		FiringType = ECannonType::FireTrace;
-		GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Green, TEXT("changed to laser"));
-	}
-	else
-	{
-		FiringType = ECannonType::FireProjectile;
-		GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Green, TEXT("changed to projectiles"));
-	}
+	FiringType = NewType;
 }

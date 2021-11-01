@@ -15,6 +15,7 @@ public:
 	virtual void Start() override;
 	virtual void Stop() override;
 	virtual void Tick(float DeltaSeconds) override;
+	void AimAt(FVector& NewDirection);
 
 protected:
 	virtual void OnMeshHit(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& HitResult) override;

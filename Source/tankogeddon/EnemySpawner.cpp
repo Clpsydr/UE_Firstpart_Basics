@@ -2,7 +2,7 @@
 #include "EnemySpawner.h"
 #include "HPcomponent.h"
 #include "Components/SceneComponent.h"
-#include "Components/SkeletalMeshComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Components/ArrowComponent.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -21,8 +21,11 @@ AEnemySpawner::AEnemySpawner()
 	USceneComponent* SceneComp = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	RootComponent = SceneComp;
 
-	BuildingMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Building Mesh"));
+	BuildingMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Building Mesh"));
 	BuildingMesh->SetupAttachment(SceneComp);
+
+	BuildingDestroyedMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Destroyed Mesh"));
+	BuildingDestroyedMesh->SetupAttachment(SceneComp);
 
 	TankSpawnPoint = CreateDefaultSubobject<UArrowComponent>(TEXT("Cannon setup point"));
 	TankSpawnPoint->SetupAttachment(SceneComp);
@@ -82,6 +85,9 @@ void AEnemySpawner::GenerateImpact(FVector& EffectLocation, float Duration)
 
 void AEnemySpawner::Die()
 {
+	BuildingMesh->SetVisibility(false, false);
+	BuildingDestroyedMesh->SetVisibility(true, false);
+	
 	if (MapLoader)
 	{
 		MapLoader->CheckGoal();
@@ -96,7 +102,6 @@ void AEnemySpawner::Die()
 	}
 
 	HitCollider->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	BuildingMesh->Play(true);
 
 	DeathEffect->ActivateSystem();
 	DeathSoundEffect->Play();
