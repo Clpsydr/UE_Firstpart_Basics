@@ -24,7 +24,6 @@ ATower::ATower()
 	HitCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("Hit collider"));
 	HitCollider->SetupAttachment(BodyMesh);
 
-	//Loading assets from text url
 	UStaticMesh* TurretMeshTemp = LoadObject<UStaticMesh>(this, *TurretMeshPath);
 	if (TurretMeshTemp)
 	{
@@ -41,7 +40,6 @@ ATower::ATower()
 	TowerHP->OnDie.AddDynamic(this, &ATower::OnDie);
 }
 
-// Called when the game starts or when spawned
 void ATower::BeginPlay()
 {
 	Super::BeginPlay();
@@ -139,7 +137,6 @@ bool ATower::CanFire()
 	return AimAngle <= Accuracy;
 }
 
-// Called every frame
 void ATower::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);

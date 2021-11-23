@@ -47,15 +47,13 @@ void AProjectile::ApplyPhysics(AActor* HitActor, AActor* OtherActor)
 
 void AProjectile::OnMeshHit(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& HitResult)
 {
-	if (OtherActor == GetInstigator()) 	// bullet hitting its parent shouldn't do anything (it still does though)
+	if (OtherActor == GetInstigator()) 	
 	{
 		return;
 	}
 
 	if (bIsAOEEnabled)
 	{
-		//scan aoe
-		//for each element check pushing and damaging components
 		FVector StartPos = GetActorLocation();
 		FVector EndPos = StartPos + FVector(0.1f);
 

@@ -33,7 +33,6 @@ AMapLoader::AMapLoader()
 void AMapLoader::BeginPlay()
 {
 	Super::BeginPlay();
-
     SetActiveLights();
 }
 
@@ -57,8 +56,8 @@ void AMapLoader::SetIsActivated(bool NewIsActivated)
 
 void AMapLoader::SetActiveLights()
 {
-       ActivatedLight->SetHiddenInGame(!bIsActivated);
-       DeactivatedLight->SetHiddenInGame(bIsActivated);
+    ActivatedLight->SetHiddenInGame(!bIsActivated);
+    DeactivatedLight->SetHiddenInGame(bIsActivated);
 }
 
 void AMapLoader::OnTriggerOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,

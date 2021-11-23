@@ -111,6 +111,6 @@ void AEnemyTower::OnDie_Implementation()
 	BodyMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	HitCollider->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	Cannon->Destroy();  // Throws exception, probably because something still attempts to call for the cannon
+	Cannon->Destroy();  
 	SetLifeSpan(3.f);
 }

@@ -66,7 +66,6 @@ private:
 	FTimerHandle BurstTimerHandle;
 	FTimerDelegate BurstTimer;
 
-	int currentburst = 0;
 	bool bIsReadyToFire = false;
 	bool bIsBursting = false;
 
@@ -78,9 +77,9 @@ public:
 	void AltFire();
 
 	UFUNCTION()
-		void Burst(int count, ECannonType currentFiringType);
+		void Burst(int Count, ECannonType CurrentFiringType);
 	UFUNCTION()
-		void Refill(int amount);
+		void Refill(int Amount);
 
 	void CycleWeapons(ECannonType NewType);
 

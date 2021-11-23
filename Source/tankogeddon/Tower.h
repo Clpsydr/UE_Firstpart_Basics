@@ -15,7 +15,6 @@ class TANKOGEDDON_API ATower : public AActor, public IDamageable
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
 	ATower();
 
 protected:
@@ -49,7 +48,6 @@ protected:
 	const FString BodyMeshPath = "StaticMesh'/Game/Meshes/SM_CSC_Tower1.SM_CSC_Tower1'";  
 	const FString TurretMeshPath = "StaticMesh'/Game/Meshes/SM_CSC_Gun1.SM_CSC_Gun1'"; 
 
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	virtual void Destroyed() override;
 	void Targeting();
@@ -59,7 +57,7 @@ protected:
 	void Fire();
 	void Idle();
 
-	UFUNCTION(BlueprintNativeEvent, Category="Health")  //Allows to redefine function in blueprints
+	UFUNCTION(BlueprintNativeEvent, Category="Health")  
 	void OnHealthChanged(float Damage);
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Health")
@@ -72,7 +70,6 @@ private:
 		class APawn* PlayerPawn;
 
 public:	
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void TakeDamage(const FDamageData& DamageData) override;

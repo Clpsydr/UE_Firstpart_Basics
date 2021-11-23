@@ -12,7 +12,7 @@ enum class ECannonType : uint8
 	FireMortar = 2 UMETA(Display = "mortar fire")
 };
 
-USTRUCT(BlueprintType)  //USTRUCT(BlueprintType)  < possible to use in blueprients, but needs properties to be filled as well
+USTRUCT(BlueprintType) 
 struct FDamageData
 {
 	GENERATED_BODY()

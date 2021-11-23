@@ -1,4 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 #include "TankUnit.h"
 #include "Cannon.h"
 #include "AmmoBox.h"
@@ -53,9 +52,9 @@ void ATankUnit::Tick(float DeltaTime)
 	
 	CurrentForwardAxisValue = FMath::InterpEaseIn(CurrentForwardAxisValue, TargetForwardAxisValue, DeltaTime, TankMotionSmoothness);
 
-	FVector moveVector = GetActorForwardVector() * CurrentForwardAxisValue;
-	FVector movePosition = GetActorLocation() + MoveSpeed * moveVector * DeltaTime;
-	SetActorLocation(movePosition, true);
+	FVector MoveVector = GetActorForwardVector() * CurrentForwardAxisValue;
+	FVector MovePosition = GetActorLocation() + MoveSpeed * MoveVector * DeltaTime;
+	SetActorLocation(MovePosition, true);
 
 	CurrentRotationValue = FMath::Lerp(CurrentRotationValue, TargetRotationValue, TankMotionSmoothness);
 	float Rotation = GetActorRotation().Yaw + CurrentRotationValue * RotationSpeed * DeltaTime;
@@ -157,15 +156,21 @@ void ATankUnit::OnDie_Implementation()
 	BodyMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	HitCollider->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	Cast<APatrolAIController>(GetController())->TurnOff(); //Bad stuff, code will die together with player pawn
-	GetController()->UnPossess();
-	SubWeapon->Destroy();
-	Cannon->Destroy();  
+	if (Cast<APatrolAIController>(GetController()))
+	{
+		Cast<APatrolAIController>(GetController())->TurnOff();
+		SubWeapon->Destroy();
+		Cannon->Destroy();
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Red, TEXT("Player tank destroyed "));
+	}
 
+	GetController()->UnPossess();
 	SetLifeSpan(2.f);
 }
 
-//TODO::transfer instigator impulse there to direct chunks in the appropriate direction with appropriate bullet power
 void ATankUnit::ChunkGeneration(FVector HitDirection, float HitPower)
 {
 	FActorSpawnParameters Params;

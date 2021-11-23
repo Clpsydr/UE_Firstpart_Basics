@@ -208,10 +208,18 @@ void ATankPawn::OnDie_Implementation()
 	BodyMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	HitCollider->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	
-	Cast<APatrolAIController>(GetController())->TurnOff(); //Bad stuff, code will die together with player pawn
-	GetController()->UnPossess();
-	SubWeapon->Destroy(); 
-	Cannon->Destroy();  // Throws exception, probably because something still attempts to call for the cannon
+	if (Cast<APatrolAIController>(GetController()))
+	{
+		Cast<APatrolAIController>(GetController())->TurnOff();
+		SubWeapon->Destroy();
+		Cannon->Destroy(); 
+		GetController()->UnPossess();
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Red, TEXT("Player tank destroyed "));
+	}
+
 	
 	SetLifeSpan(3.f);
 }

@@ -45,7 +45,7 @@ void ACannon::Fire()
 	Burst(1, FiringType);
 }
 
-void ACannon::AltFire()
+void ACannon::AltFire()  //while this method is replaceable by putting burst argument into Fire(), I kept AltFire() around for trying out different logic
 {
 	if (!bIsReadyToFire || IsOutOfAmmo(FiringType) || bIsBursting)
 	{
@@ -58,9 +58,9 @@ void ACannon::AltFire()
 	GetWorld()->GetTimerManager().SetTimer(BurstTimerHandle, BurstTimer, BurstDelay, false);
 }
 
-void ACannon::Burst(int count, ECannonType currentFiringType)
+void ACannon::Burst(int Count, ECannonType CurrentFiringType)
 {
-	if (count == 0)
+	if (Count == 0)
 	{
 		GetWorld()->GetTimerManager().SetTimer(ReloadTimerHandle, this, &ACannon::Reload, 1.f / FireRate, false);
 	}
@@ -82,10 +82,10 @@ void ACannon::Burst(int count, ECannonType currentFiringType)
 			}
 		}
 
-		BurstTimer.BindUFunction(this, FName("Burst"), count - 1, currentFiringType);
+		BurstTimer.BindUFunction(this, FName("Burst"), Count - 1, CurrentFiringType);
 		GetWorld()->GetTimerManager().SetTimer(BurstTimerHandle, BurstTimer, BurstDelay, false);
 
-		if (currentFiringType == ECannonType::FireProjectile)
+		if (CurrentFiringType == ECannonType::FireProjectile)
 		{
 					UBulletPoolSubsystem* BulletPool = GetWorld()->GetSubsystem<UBulletPoolSubsystem>();
 			FTransform SpawnTransform(ProjectileSpawnPoint->GetComponentRotation(), ProjectileSpawnPoint->GetComponentLocation(), FVector::OneVector);
@@ -98,7 +98,7 @@ void ACannon::Burst(int count, ECannonType currentFiringType)
 				Projectile->Start();
 			}
 		}
-		else if (currentFiringType == ECannonType::FireTrace)
+		else if (CurrentFiringType == ECannonType::FireTrace)
 		{
 			FireSoundEffect->Play();
 
@@ -113,11 +113,6 @@ void ACannon::Burst(int count, ECannonType currentFiringType)
 				LaserEffect->SetBeamSourcePoint(0, TraceStart, 0);
 				LaserEffect->SetBeamTargetPoint(0, HitResult.Location, 0);
 
-				/*if (HitResult.Actor.IsValid() && HitResult.Component.IsValid(), HitResult.Component->GetCollisionObjectType() == ECC_WorldDynamic)
-				{
-					GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Orange, TEXT("Traced a destructible prop"));
-					HitResult.Actor->Destroy();
-				}*/
 				if (IDamageable* Damageable = Cast<IDamageable>(HitResult.Actor))
 				{
 					GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Orange, TEXT("Hit a " + HitResult.Actor->GetName()));
@@ -135,12 +130,11 @@ void ACannon::Burst(int count, ECannonType currentFiringType)
 				LaserEffect->SetBeamTargetPoint(0, TraceEnd, 0);
 			}
 		}
-		else if (currentFiringType == ECannonType::FireMortar)
+		else if (CurrentFiringType == ECannonType::FireMortar)
 		{
 			UBulletPoolSubsystem* BulletPool = GetWorld()->GetSubsystem<UBulletPoolSubsystem>();
 			FTransform SpawnTransform(ProjectileSpawnPoint->GetComponentRotation(), ProjectileSpawnPoint->GetComponentLocation(), FVector::OneVector);
 			APhysBullet* Projectile = Cast<APhysBullet>(BulletPool->RetrieveActor(ProjectileClass, SpawnTransform));
-			//AAmmoBox* AmmoBox = Cast<AAmmoBox>(BulletPool->RetrieveActor(ItemDrop, SpawnTransform));
 
 			FVector DirectionToPlayer = ProjectileSpawnPoint->GetComponentLocation() + FireRange;
 			Projectile->AimAt(DirectionToPlayer);
@@ -166,7 +160,6 @@ bool ACannon::IsOutOfAmmo(ECannonType CurrentType)
 	return (Ammo <= 0);
 }
 
-// Called when the game starts or when spawned
 void ACannon::BeginPlay()
 {
 	Super::BeginPlay();
@@ -188,9 +181,9 @@ void ACannon::Reload()
 	bIsBursting = false;
 }
 
-void ACannon::Refill(int amount)
+void ACannon::Refill(int Amount)
 {
-	Ammo = FMath::Clamp(Ammo+amount, amount, MaxAmmo);
+	Ammo = FMath::Clamp(Ammo+Amount, Amount, MaxAmmo);
 }
 
 ECannonType ACannon::GetType()

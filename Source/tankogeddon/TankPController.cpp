@@ -29,13 +29,7 @@ void ATankPController::BeginPlay()
 void ATankPController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-
-	//GetMousePosition  // just returns mouse screen coords (upper right corner)
-
-	// returns 2 Fvectors  
-			// position projected on the front frustum surface of the camera
-			// would allow correct rotation only in case of top down angle centered on the tank.
-			
+		
 	FVector WorldMousePosition, WorldMouseDirection;
 	DeprojectMousePositionToWorld(WorldMousePosition, WorldMouseDirection);
 

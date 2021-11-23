@@ -14,7 +14,6 @@ class TANKOGEDDON_API AWeaponUnit : public APawn, public IDamageable
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
 	AWeaponUnit();
 
 protected:

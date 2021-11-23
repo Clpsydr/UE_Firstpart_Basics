@@ -56,7 +56,7 @@ void APhysBullet::OnMeshHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 	FQuat Rotation = FQuat::Identity;
 
 	DrawDebugSphere(GetWorld(), StartPos, 5, 8, FColor::Red, true, 1, 0, 2);
-	//GetWorld()->DebugDrawTraceTag = "AOE Trace";
+	GetWorld()->DebugDrawTraceTag = "AOE Trace";
 
 	bool bSweepResult = GetWorld()->SweepMultiByChannel
 	(

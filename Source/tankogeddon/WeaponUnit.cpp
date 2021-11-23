@@ -37,7 +37,6 @@ AWeaponUnit::AWeaponUnit()
 	HP = CreateDefaultSubobject<UHPcomponent>(TEXT("Health component"));
 }
 
-// Called when the game starts or when spawned
 void AWeaponUnit::BeginPlay()
 {
 	Super::BeginPlay();
@@ -62,7 +61,6 @@ void AWeaponUnit::Fire()
 		Cannon->Fire();
 }
 
-// Called every frame
 void AWeaponUnit::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);

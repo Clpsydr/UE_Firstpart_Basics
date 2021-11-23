@@ -53,7 +53,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Parameters")
 		class AMapLoader* MapLoader;
 
-
 	virtual void BeginPlay() override;
 	virtual void EndPlay(EEndPlayReason::Type EndPlayReason) override;
 
