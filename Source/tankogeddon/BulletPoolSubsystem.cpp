@@ -12,7 +12,7 @@ AActor* UBulletPoolSubsystem::RetrieveActor(UClass* Class, const FTransform& Tra
 	if (Pool && Pool->Num() > 0)
 	{
 		Result = Pool->Pop();
-		FVector CorrectedScale = Transform.GetScale3D() * Result->GetActorScale();  //theoretically only managed due to bullet mesh wildly scaling
+		FVector CorrectedScale = Transform.GetScale3D() * Result->GetActorScale();  //theoretically scale is managed there due to bullet mesh not being properly modelled
 		Result->SetActorTransform(FTransform(Transform.GetRotation(), Transform.GetLocation(), CorrectedScale), false, nullptr, 
 			ETeleportType::ResetPhysics);
 		Result->SetActorTickEnabled(true);
@@ -52,7 +52,6 @@ bool UBulletPoolSubsystem::IsActorInPool(AActor* Actor) const
 	return ActorArray.Contains(Actor);
 }
 
-/// TODO: understand what this method means
 bool UBulletPoolSubsystem::DoesSupportWorldType(EWorldType::Type WorldType) const
 {
 	return WorldType == EWorldType::Game || WorldType == EWorldType::PIE;
@@ -68,4 +67,3 @@ void UBulletPoolSubsystem::OnActorDestroyed(AActor* Actor)
 	}
 	ActorArray.Remove(Actor);
 }
-

@@ -13,8 +13,7 @@ class TANKOGEDDON_API UHPcomponent : public UActorComponent
 	GENERATED_BODY()
 
 public:	
-	// Sets default values for this component's properties
-	UHPcomponent();
+	UHPcomponent(); // Sets default values for this component's properties
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Health values")
 		float MaxHealth = 20.f;

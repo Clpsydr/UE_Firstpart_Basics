@@ -1,16 +1,10 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 #include "HPcomponent.h"
 
-// Sets default values for this component's properties
 UHPcomponent::UHPcomponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
-
-	// WATCH OUT 
-	// order between c++ constructor and blueprint values might be improper. headers value will be assumed there before blueprint's changed value
-	// CurrentHealth = MaxHealth;
 }
 
 void UHPcomponent::TakeDamage(const FDamageData& DmgData)
@@ -48,6 +42,5 @@ void UHPcomponent::AddHealth(float HPBonus)
 void UHPcomponent::BeginPlay()
 {
 	Super::BeginPlay();
-
 	CurrentHealth = MaxHealth;
 }

@@ -1,4 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 #include "EnemySpawner.h"
 #include "HPcomponent.h"
 #include "Components/SceneComponent.h"

@@ -18,7 +18,7 @@ void UPhysMovementComponent::ReinitValues()
 	float Zstart = GetOwner()->GetActorLocation().Z;
 	float Zend = 0.f;
 
-	//applying multiplier of range to velocity
+	// applying multiplier of range to velocity
 	Velocity = GetOwner()->GetActorForwardVector() * FVector::Distance(GetOwner()->GetActorLocation(), TargetLocation);
 
 	// changing gravity and altitude of velocity to constant
@@ -29,7 +29,6 @@ void UPhysMovementComponent::ReinitValues()
 	}
 }
 
-// Called every frame
 void UPhysMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);

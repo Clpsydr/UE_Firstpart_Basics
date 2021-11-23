@@ -86,7 +86,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Effects")
 		TSubclassOf<class ATankChunks> PostDeathFragments;
 
-	UFUNCTION(BlueprintNativeEvent, Category = "Health")  //Allows to redefine function in blueprints
+	UFUNCTION(BlueprintNativeEvent, Category = "Health")  
 		void OnHealthChanged(float Damage);
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Health")
@@ -110,7 +110,6 @@ private:
 	FVector TurretTargetAngle;
 
 public:
-	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual void Tick(float DeltaTime) override;

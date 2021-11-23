@@ -27,7 +27,7 @@ class TANKOGEDDON_API AEnemyTower : public AWeaponUnit
 		bool CanFire();
 		void Idle();
 
-		UFUNCTION(BlueprintNativeEvent, Category = "Health")  //Allows to redefine function in blueprints
+		UFUNCTION(BlueprintNativeEvent, Category = "Health")  
 			void OnHealthChanged(float Damage);
 
 		UFUNCTION(BlueprintNativeEvent, Category = "Health")

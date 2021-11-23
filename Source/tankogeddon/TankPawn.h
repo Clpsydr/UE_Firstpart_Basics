@@ -76,10 +76,10 @@ protected:
 		class UBoxComponent* HitCollider;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Effects")
-		class  UParticleSystemComponent* DamageEffect;
+		class UParticleSystemComponent* DamageEffect;
 	
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Effects")
-		class  UParticleSystemComponent* DestructionEffect;
+		class UParticleSystemComponent* DestructionEffect;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Effects")
 		class UAudioComponent* DeathSoundEffect;
@@ -113,7 +113,6 @@ protected:
 	UFUNCTION(BlueprintNativeEvent, Category = "Health")
 		void OnDie();
 
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 
@@ -133,12 +132,10 @@ private:
 	FVector TurretTargetAngle;
 
 public:	
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void TakeDamage(const FDamageData& DamageData) override;
 
-	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 };
