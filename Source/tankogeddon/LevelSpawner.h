@@ -89,7 +89,7 @@ public:
 	void BasicGeneration(FDungeonField& LinkedDungeon);
 
 	//picks random cell within array bounds
-	const FDungeonCell* GetRandomCell(const FDungeonField& LinkedDungeon);
+	const FDungeonCell& GetRandomCell(const FDungeonField& LinkedDungeon);
 
 	//???
 	void GetRandomDirection(const FDungeonCell& Position, const FVector2D Dimensions);

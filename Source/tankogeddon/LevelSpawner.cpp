@@ -38,8 +38,8 @@ FDungeonField ALevelSpawner::InitDungeon(int32 SizeX, int32 SizeY)
 
 void ALevelSpawner::BasicGeneration(FDungeonField& LinkedDungeon)
 {
-	const FDungeonCell* StartingPoint = GetRandomCell(LinkedDungeon);
-	LinkedDungeon.StartCoords = StartingPoint->Pos;
+	LinkedDungeon.StartCoords = GetRandomCell(LinkedDungeon).Pos;
+	
 	// randomly pick direction if allowed
 
 	//employ binary tree first > either N or E , with startpos being lower left corner!
@@ -52,9 +52,9 @@ void ALevelSpawner::BasicGeneration(FDungeonField& LinkedDungeon)
 	//must be issue with tracking back! GetAllowedDirections should check already linked rooms beside boundaries.
 }
 
-const FDungeonCell* ALevelSpawner::GetRandomCell(const FDungeonField& LinkedDungeon)
+const FDungeonCell& ALevelSpawner::GetRandomCell(const FDungeonField& LinkedDungeon)
 {
-	return &LinkedDungeon.Field[FMath::RandRange(0, LinkedDungeon.Field.Num())];
+	return LinkedDungeon.Field[FMath::RandRange(0, LinkedDungeon.Field.Num())];
 }
 
 int8 ALevelSpawner::GetAllowedDirections(const FDungeonCell& Position, const FVector2D Dimensions)
